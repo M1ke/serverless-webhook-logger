@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d7f4e77604f4783ffaeeb199869d5ef6",
+    "content-hash": "b3d98858ca3778507bc3aec9d71d546d",
     "packages": [
         {
             "name": "aws/aws-sdk-php",
@@ -399,16 +399,16 @@
         },
         {
             "name": "m1ke/json-explore",
-            "version": "0.1.2",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/M1ke/php-json-explore.git",
-                "reference": "3b1ee90f5b7261dc42000e016da0e0a3232e682e"
+                "reference": "807083be83acc6f2987ed82bba78b9027e9bde10"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/M1ke/php-json-explore/zipball/3b1ee90f5b7261dc42000e016da0e0a3232e682e",
-                "reference": "3b1ee90f5b7261dc42000e016da0e0a3232e682e",
+                "url": "https://api.github.com/repos/M1ke/php-json-explore/zipball/807083be83acc6f2987ed82bba78b9027e9bde10",
+                "reference": "807083be83acc6f2987ed82bba78b9027e9bde10",
                 "shasum": ""
             },
             "type": "library",
@@ -429,7 +429,7 @@
                 }
             ],
             "description": "Allows you to analyse the fields present in a data structure, aimed at APIs returning data as JSON",
-            "time": "2019-06-13T09:31:26+00:00"
+            "time": "2019-07-09T13:43:03+00:00"
         },
         {
             "name": "mnapoli/silly",
