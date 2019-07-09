@@ -1,0 +1,7 @@
+{
+    "require": {
+        "bref/bref": "^0.4",
+        "monolog/monolog": "^1.24",
+        "m1ke/json-explore": "^0.1.2"
+    }
+}

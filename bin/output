@@ -1,0 +1,7 @@
+#!/bin/bash
+
+stack="webhook-logger"
+
+aws cloudformation describe-stacks --stack-name "$stack" \
+    --query 'Stacks[0].Outputs[?OutputKey==`Url`].OutputValue' \
+    --output text
