@@ -11,6 +11,8 @@ use Monolog\Logger;
 
 require __DIR__.'/vendor/autoload.php';
 
+require __DIR__.'/config.php';
+
 /**
  * @param DynamoDbClient $client
  * @param array $entity
@@ -36,27 +38,66 @@ function insert(DynamoDbClient $client, array $entity, string $table_name){
  */
 function insertParams(array $entity, string $table_name):array{
 	$marshaler = new Marshaler();
-	$item = $entity;
-	// Not connected to our app time as its a date relating
-	// to when AWS with auto delete the row, meaning it needs
-	// to be whatever time the row is being inserted
-	$item['ttl'] = (new \DateTimeImmutable())->add(new DateInterval('P1D'))->getTimestamp();
-	$item_marshal = $marshaler->marshalItem($item);
+	$item_marshal = $marshaler->marshalItem($entity);
 
 	$item_params = ['TableName' => $table_name, 'Item' => $item_marshal];
 
 	return $item_params;
 }
 
-$log = new Logger('name');
-$log->pushHandler(new StreamHandler('php://stderr', Logger::WARNING));
+/**
+ * @return string
+ */
+function sqlDate(){
+	return date('Y-m-d H:i:s');
+}
 
-$args = [
-	'region' => 'eu-west-1',
-	'version' => 'latest',
-];
+/**
+ * @return Sdk
+ */
+function getDynamo(){
+	$args = [
+		'region' => AWS_REGION,
+		'version' => 'latest',
+	];
 
-$sdk = new Sdk($args);
+	$sdk = new Sdk($args);
+
+	return $sdk;
+}
+
+/**
+ * @return Logger
+ */
+function getLogger(){
+	$log = new Logger('name');
+	$log->pushHandler(new StreamHandler('php://stderr', Logger::WARNING));
+
+	return $log;
+}
+
+/**
+ * @param DynamoDbClient $dynamo
+ * @param string $json
+ * @param JsonExplore $explore
+ * @throws Exception
+ */
+function logWebhook(DynamoDbClient $dynamo, string $json, JsonExplore $explore){
+	$entity = [
+		'id' => uniqid(),
+		'datetime' => sqlDate(),
+		'json' => $json,
+		'parsed' => $explore->asPathString(),
+		'processed' => false,
+		'ttl' => time()+TTL_SECONDS,
+	];
+
+	insert($dynamo, $entity, LOG_TABLE);
+}
+
+$log = getLogger();
+
+$sdk = getDynamo();
 
 $dynamo = $sdk->createDynamoDb();
 
@@ -71,12 +112,4 @@ catch (InvalidArgumentException $e) {
 	return;
 }
 
-$entity = [
-	'id' => uniqid(),
-	'datetime' => date('Y-m-d H:i:s'),
-	'json' => $json,
-	'parsed' => $explore->asPathString(),
-	'processed' => false,
-];
-
-insert($dynamo, $entity, 'webhook-logger');
+logWebhook($dynamo, $json, $explore);

@@ -66,6 +66,10 @@ to see logs. If this fails check the [Cloudwatch console](https://eu-west-1.cons
 where a log group like `/aws/lambda/webhook-logger` should exist (remember to choose the correct region in the top bar
 of the console) with a stream for each series of invocations.
 
+### Modifying
+
+Some config items can be changed easily in `config.php`
+
 ## Acknowledgements
 
 The basis of this function came from the [Bref documentation for HTTP endpoints](https://bref.sh/docs/runtimes/http.html)
