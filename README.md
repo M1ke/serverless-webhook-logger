@@ -5,7 +5,7 @@ of time you may not know the range of values or possibilities. Alternatively you
 not want to expose a route in your own application but instead to process records from
 a decoupled source.
 
-This project uses AWS Lambda (via Bref PHP), API Gateway and DynamoDB to provide a simple
+This project uses AWS Lambda (via [Bref PHP](https://bref.sh)), API Gateway and DynamoDB to provide a simple
 tool that can log inbound webhooks. You could use this for analysis, or via a stream
 into another tool to process them.
 
@@ -69,3 +69,9 @@ of the console) with a stream for each series of invocations.
 ## Acknowledgements
 
 The basis of this function came from the [Bref documentation for HTTP endpoints](https://bref.sh/docs/runtimes/http.html)
+
+### Related
+
+This project uses [m1ke/json-explore](https://github.com/M1ke/php-json-explore) to create a parsed set of
+keys found in the JSON sent via webhook. This library has other uses for API exploration, and different methods
+for rendering the data it analyses about a JSON payload.
