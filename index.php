@@ -53,7 +53,7 @@ function sqlDate(){
 }
 
 /**
- * @return Sdk
+ * @return DynamoDbClient
  */
 function getDynamo(){
 	$args = [
@@ -63,7 +63,9 @@ function getDynamo(){
 
 	$sdk = new Sdk($args);
 
-	return $sdk;
+	$dynamo = $sdk->createDynamoDb();
+
+	return $dynamo;
 }
 
 /**
@@ -97,9 +99,7 @@ function logWebhook(DynamoDbClient $dynamo, string $json, JsonExplore $explore){
 
 $log = getLogger();
 
-$sdk = getDynamo();
-
-$dynamo = $sdk->createDynamoDb();
+$dynamo = getDynamo();
 
 $json = file_get_contents('php://input');
 
