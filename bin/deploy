@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bucket="YOUR_BUCKET_HERE"
+bucket="$(cat .config)"
 stack="webhook-logger"
 
 sam package \

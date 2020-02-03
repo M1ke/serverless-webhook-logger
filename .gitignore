@@ -1,6 +1,8 @@
 .idea/
 vendor/
 .stack.yml
+.stack.yaml
 .terraform
 terraform.tfvars
 terraform.tfstate
+.config

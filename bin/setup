@@ -1,0 +1,12 @@
+#!/bin/bash
+
+deploy_bucket=$1
+
+if [ -z "$deploy_bucket" ]; then
+  echo "Add the name of your deployment bucket as the first argument"
+  exit 1
+fi
+
+cp terraform.tfvars.example terraform.tfvars
+echo "$deploy_bucket" > .config
+sed -i "s/YOUR_BUCKET_NAME/$deploy_bucket/" terraform.tfvars

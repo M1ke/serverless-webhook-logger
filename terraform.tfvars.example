@@ -1,2 +1,2 @@
 region = "eu-west-1"
-deploy_bucket = "<your handle>-webhook-logger-deploy"
+deploy_bucket = "YOUR_BUCKET_NAME"
