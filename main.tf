@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "YOUR_REGION_HERE"
+  region = "${var.region}"
 }
 
 resource "aws_dynamodb_table" "webhook-logger" {
@@ -31,7 +31,7 @@ resource "aws_dynamodb_table" "webhook-logger" {
 }
 
 resource "aws_s3_bucket" "webhook-logger-code" {
-  bucket = "YOUR_BUCKET_HERE"
+  bucket = "${var.deploy_bucket}"
 }
 
 resource "aws_iam_role" "webhook-logger" {
