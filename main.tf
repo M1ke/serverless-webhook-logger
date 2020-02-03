@@ -30,10 +30,6 @@ resource "aws_dynamodb_table" "webhook-logger" {
   }*/
 }
 
-resource "aws_s3_bucket" "webhook-logger-code" {
-  bucket = "${var.deploy_bucket}"
-}
-
 resource "aws_iam_role" "webhook-logger" {
   name = "webhook-logger"
   path = "/"

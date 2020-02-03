@@ -1,17 +1,7 @@
 #!/bin/bash
 
-bucket="$(cat .config)"
-stack="webhook-logger"
+composer install --prefer-dist --optimize-autoloader --no-dev
 
-sam package \
-    --output-template-file .stack.yaml \
-    --s3-bucket $bucket
+serverless deploy
 
-sam deploy \
-    --template-file .stack.yaml \
-    --capabilities CAPABILITY_IAM \
-    --stack-name "$stack"
-
-aws cloudformation describe-stacks --stack-name "$stack" \
-    --query 'Stacks[0].Outputs[?OutputKey==`Url`].OutputValue' \
-    --output text
+composer install

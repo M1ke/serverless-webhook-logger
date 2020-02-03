@@ -1,0 +1,33 @@
+service: webhook-logger
+
+provider:
+    name: aws
+    region: eu-west-1
+    runtime: provided
+    role: arn:aws:iam::272094006224:role/webhook-logger
+
+plugins:
+    - ./vendor/bref/bref
+
+package:
+    exclude:
+        - '.terraform/**'
+        - 'bin/**'
+        - '.git/**'
+        - '.idea/**'
+        - '*.tfstate'
+        - '*.tf'
+        - 'terraform.tfvars'
+        - 'terraform.tfvars.example'
+        - composer.json
+
+functions:
+    api:
+        handler: index.php
+        description: ''
+        timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
+        layers:
+            - ${bref:layer.php-73-fpm}
+        events:
+            -   http: 'ANY /'
+            -   http: 'ANY /{proxy+}'

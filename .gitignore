@@ -6,3 +6,4 @@ vendor/
 terraform.tfvars
 terraform.tfstate
 .config
+.serverless
