@@ -18,13 +18,13 @@ into another tool to process them.
 
 ## Pre-install
 
-Replace the following strings wherever they appear in the project:
+Copy the `terraform.tfvars.example` file to `terraform.tfvars`. You will then want to check the default variables and change them if helpful:
 
-* `YOUR_REGION_HERE` choose your desired AWS region (e.g. eu-west-1)
-* `YOUR_BUCKET_HERE` choose a globally unique bucket name to host your code (e.g. my-company-webhook-logger-abc123)
+* `region` choose your desired AWS region (e.g. eu-west-1)
+* `deploy_bucket` choose a globally unique bucket name to host your code (e.g. my-company-webhook-logger-abc123)
 
 Note when running all commands below that touch AWS you'll need AWS credentials in your environment.
-There are a variety of ways to do this; using vault (e.g. `aws-vault exec YOUR_PROFILE -- terraform plan`) is recommended
+There are a variety of ways to do this; using aws-vault (e.g. `aws-vault exec YOUR_PROFILE -- terraform plan`) is recommended
 
 ## Install
 
