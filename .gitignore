@@ -4,6 +4,6 @@ vendor/
 .stack.yaml
 .terraform
 terraform.tfvars
-terraform.tfstate
+terraform.tfstate*
 .config
 .serverless

@@ -20,14 +20,10 @@ resource "aws_dynamodb_table" "webhook-logger" {
     type = "S"
   }
 
-  /*
-
-  Uncomment this to enable auto-expiry of records
-
   ttl {
     attribute_name = "ttl"
-    enabled        = false
-  }*/
+    enabled        = true
+  }
 }
 
 resource "aws_iam_role" "webhook-logger" {
