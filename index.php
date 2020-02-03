@@ -18,7 +18,7 @@ require __DIR__.'/config.php';
  * @param array $entity
  * @param string $table_name
  * @return Result
- * @throws Exception
+ * @throws RuntimeException
  */
 function insert(DynamoDbClient $client, array $entity, string $table_name){
 	$item_params = insertParams($entity, $table_name);
@@ -27,7 +27,7 @@ function insert(DynamoDbClient $client, array $entity, string $table_name){
 		return $client->putItem($item_params);
 	}
 	catch (DynamoDbException $e) {
-		throw new Exception('There was an error saving data to DynamoDB.');
+		throw new RuntimeException('There was an error saving data to DynamoDB.');
 	}
 }
 
@@ -40,9 +40,7 @@ function insertParams(array $entity, string $table_name):array{
 	$marshaler = new Marshaler();
 	$item_marshal = $marshaler->marshalItem($entity);
 
-	$item_params = ['TableName' => $table_name, 'Item' => $item_marshal];
-
-	return $item_params;
+	return ['TableName' => $table_name, 'Item' => $item_marshal];
 }
 
 /**
@@ -63,9 +61,7 @@ function getDynamo(){
 
 	$sdk = new Sdk($args);
 
-	$dynamo = $sdk->createDynamoDb();
-
-	return $dynamo;
+	return $sdk->createDynamoDb();
 }
 
 /**
@@ -86,7 +82,7 @@ function getLogger(){
  */
 function logWebhook(DynamoDbClient $dynamo, string $json, JsonExplore $explore){
 	$entity = [
-		'id' => uniqid(),
+		'id' => uniqid('', true),
 		'datetime' => sqlDate(),
 		'json' => $json,
 		'parsed' => $explore->asPathString(),
@@ -107,9 +103,14 @@ try {
 	$explore = JsonExplore::fromJson($json)->analyse();
 }
 catch (InvalidArgumentException $e) {
-	$log->warning("JSON parse error with message: ".json_last_error_msg().". String content was: $json");
+	$log->warning('JSON parse error with message: '.json_last_error_msg().". String content was: $json");
 
 	return;
 }
 
-logWebhook($dynamo, $json, $explore);
+try {
+	logWebhook($dynamo, $json, $explore);
+}
+catch (Exception $e) {
+	$log->error($e->getMessage());
+}
