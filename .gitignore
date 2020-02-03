@@ -2,3 +2,4 @@
 vendor/
 .stack.yml
 .terraform
+terraform.tfvars
