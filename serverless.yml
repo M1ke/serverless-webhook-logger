@@ -4,7 +4,7 @@ provider:
     name: aws
     region: eu-west-1
     runtime: provided
-    role: arn:aws:iam::272094006224:role/webhook-logger
+    role: arn:aws:iam::004945364680:role/webhook-logger
 
 plugins:
     - ./vendor/bref/bref
@@ -27,7 +27,7 @@ functions:
         description: ''
         timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
         layers:
-            - ${bref:layer.php-73-fpm}
+            - ${bref:layer.php-74-fpm}
         events:
             -   http: 'ANY /'
             -   http: 'ANY /{proxy+}'

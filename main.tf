@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "${var.region}"
+  region = var.region
 }
 
 resource "aws_dynamodb_table" "webhook-logger" {
@@ -24,6 +24,10 @@ resource "aws_dynamodb_table" "webhook-logger" {
     attribute_name = "ttl"
     enabled        = true
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_iam_role" "webhook-logger" {
@@ -46,7 +50,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "webhook-logger" {
-  role = "${aws_iam_role.webhook-logger.name}"
+  role = aws_iam_role.webhook-logger.name
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -83,5 +87,5 @@ POLICY
 }
 
 output "webhook-logger-role-arn" {
-  value = "${aws_iam_role.webhook-logger.arn}"
+  value = aws_iam_role.webhook-logger.arn
 }

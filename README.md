@@ -50,7 +50,7 @@ At the end of the run it will output as follows:
 
 ```
 Successfully created/updated stack - webhook-logger
-https://xxxxxxx.execute-api.YOUR_REGION_HERE.amazonaws.com/Prod/
+https://xxxxxxx.execute-api.YOUR_REGION_HERE.amazonaws.com/dev
 ```
 
 NB if you miss the output run `bin/output` to see it again without deploying the stack.
@@ -58,7 +58,7 @@ NB if you miss the output run `bin/output` to see it again without deploying the
 If you run a request to that endpoint you should see the result logged:
 
 ```
-curl -v -XPOST -H 'Content-type: application/json' -d '{"test":"abc123"}' 'YOUR_URL_HERE'
+curl -v -XPOST -H 'Content-type: application/json' -d '{"test":"abc123"}' ' https://xxxxxxx.execute-api.eu-west-1.amazonaws.com/dev'
 ```
 
 Go to the [DynamoDB console](https://eu-west-1.console.aws.amazon.com/dynamodb/home) and view the table "webhook-logger"
