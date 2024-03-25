@@ -5,28 +5,29 @@ use Aws\DynamoDb\Exception\DynamoDbException;
 use Aws\DynamoDb\Marshaler;
 use Aws\Result;
 use Aws\Sdk;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\ServerRequest;
 use M1ke\JsonExplore\JsonExplore;
 use Monolog\Handler\StreamHandler;
+use Monolog\Level;
 use Monolog\Logger;
+use Psr\Http\Message\ServerRequestInterface;
 
 require __DIR__.'/vendor/autoload.php';
 
 require __DIR__.'/config.php';
 
 /**
- * @param array $entity
- * @param string $table_name
- * @return Result
  * @throws RuntimeException
  */
-function insert(array $entity, string $table_name){
+function insert(array $entity, string $table_name): Result{
 	$client = getDynamo();
 	$item_params = insertParams($entity, $table_name);
 
 	try {
 		return $client->putItem($item_params);
 	}
-	catch (DynamoDbException $e) {
+	catch (DynamoDbException) {
 		throw new RuntimeException('There was an error saving data to DynamoDB.');
 	}
 }
@@ -55,12 +56,12 @@ function getDynamo(): DynamoDbClient{
 
 function getLogger(): Logger{
 	$log = new Logger('name');
-	$log->pushHandler(new StreamHandler('php://stderr', Logger::WARNING));
+	$log->pushHandler(new StreamHandler('php://stderr', Level::Info));
 
 	return $log;
 }
 
-function logWebhook(string $body, ?JsonExplore $json, ?JsonExplore $query, ?JsonExplore $form, Logger $log){
+function logWebhook(string $body, ?JsonExplore $json, ?JsonExplore $query, ?JsonExplore $form, Logger $log): void{
 	if (!$form && !$json && !$query){
 		$log->info('No data in form, JSON input, or query string, will not save log');
 
@@ -71,15 +72,15 @@ function logWebhook(string $body, ?JsonExplore $json, ?JsonExplore $query, ?Json
 		'id' => uniqid('', true),
 		'datetime' => sqlDate(true),
 		'json' => $json ? $body : null,
-		'json_parsed' => $json ? $json->asPathString() : null,
+		'json_parsed' => $json?->asPathString(),
 		'form' => $_POST ? json_encode($_POST) : null,
-		'form_parsed' => $form ? $form->asPathString() : null,
+		'form_parsed' => $form?->asPathString(),
 		'query' => $_GET ? json_encode($_GET) : '',
-		'query_parsed' => $query ? $query->asPathString() : null,
+		'query_parsed' => $query?->asPathString(),
 		'processed' => false,
 		'ttl' => time()+TTL_SECONDS,
 	];
-	$entity = array_filter($entity, static fn ($n) => $n!==null && $n!=='');
+	$entity = array_filter($entity, static fn($n) => $n!==null && $n!=='');
 
 	insert($entity, LOG_TABLE);
 }
@@ -94,7 +95,7 @@ function dataFromJson(string $json, Logger $log): ?JsonExplore{
 	try {
 		return JsonExplore::fromJson($json)->analyse();
 	}
-	catch (InvalidArgumentException $e) {
+	catch (InvalidArgumentException) {
 		$log->warning('JSON parse error with message: '.json_last_error_msg().". String content was: $json");
 
 		return null;
@@ -121,8 +122,18 @@ function dataFromForm(array $form, Logger $log): ?JsonExplore{
 	return JsonExplore::fromArray($form)->analyse();
 }
 
+function relay_builder(ServerRequestInterface $request, Logger $log) :void{
+	$client = new Client();
+	// Use this to trigger a pipeline
+	$relay_request = new \GuzzleHttp\Psr7\Request($request->getMethod(), 'bitbucket... ');
+}
+
 $log = getLogger();
+
+$request = ServerRequest::fromGlobals();
+
 try {
+	// Replace these with the $request item above
 	$body = (string)file_get_contents('php://input');
 	$json_explored = dataFromJson($body, $log);
 	$query_explored = dataFromQuery($_GET, $log);
@@ -132,4 +143,17 @@ try {
 }
 catch (Exception $e) {
 	$log->error($e->getMessage());
+}
+
+$path = $request->getUri()->getPath();
+
+const RELAY_PATH = '/relay/';
+
+if (str_starts_with($path, RELAY_PATH)){
+	$log->info('Entering relay mode');
+	$relay = explode(RELAY_PATH, $path, 2)[1];
+
+	match ($relay){
+		'builder' => relay_builder($request, $log),
+	};
 }

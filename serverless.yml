@@ -3,7 +3,7 @@ service: webhook-logger
 provider:
     name: aws
     region: eu-west-1
-    runtime: provided
+    runtime: provided.al2
     role: arn:aws:iam::004945364680:role/webhook-logger
 
 plugins:
@@ -27,7 +27,7 @@ functions:
         description: ''
         timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
         layers:
-            - ${bref:layer.php-74-fpm}
+            - ${bref:layer.php-81-fpm}
         events:
             -   http: 'ANY /'
             -   http: 'ANY /{proxy+}'
