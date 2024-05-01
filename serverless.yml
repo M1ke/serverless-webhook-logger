@@ -1,10 +1,14 @@
 service: webhook-logger
 
+useDotenv: true
+
 provider:
     name: aws
     region: eu-west-1
     runtime: provided.al2
-    role: arn:aws:iam::004945364680:role/webhook-logger
+    role: ${env:ENV_ROLE}
+    environment:
+        RELAY: ${env:ENV_RELAY}
 
 plugins:
     - ./vendor/bref/bref

@@ -6,16 +6,22 @@ use Aws\DynamoDb\Marshaler;
 use Aws\Result;
 use Aws\Sdk;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\ServerRequest;
 use M1ke\JsonExplore\JsonExplore;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 require __DIR__.'/vendor/autoload.php';
 
 require __DIR__.'/config.php';
+
+const RELAY_PATH = '/relay/';
 
 /**
  * @throws RuntimeException
@@ -122,10 +128,38 @@ function dataFromForm(array $form, Logger $log): ?JsonExplore{
 	return JsonExplore::fromArray($form)->analyse();
 }
 
-function relay_builder(ServerRequestInterface $request, Logger $log) :void{
+function relay(ServerRequestInterface $request, array $config, Logger $log): void{
+	$url = $config['url'];
+	$body = json_encode($config['body']);
+	$options = $config['options'] ?? null;
+
 	$client = new Client();
+	$headers = ['Content-Type' => 'application/json'];
 	// Use this to trigger a pipeline
-	$relay_request = new \GuzzleHttp\Psr7\Request($request->getMethod(), 'bitbucket... ');
+	$relay_request = new Request($request->getMethod(), $url, $headers, $body);
+
+	try {
+		$response = $client->send($relay_request, $options ?: []);
+
+		$log->notice("Relay sent with response", responseLogContext($response));
+	}
+	catch (GuzzleException $e) {
+		$response = $e instanceof RequestException ? $e->getResponse() : null;
+		if ($response){
+			$log->warning("Request problem", responseLogContext($response));
+
+			return;
+		}
+
+		$log->error($e->getMessage());
+	}
+}
+
+function responseLogContext(ResponseInterface $response): array{
+	return [
+		'status' => $response->getStatusCode(),
+		'body' => $response->getBody()->getContents(),
+	];
 }
 
 $log = getLogger();
@@ -141,19 +175,41 @@ try {
 
 	logWebhook($body, $json_explored, $query_explored, $form_explored, $log);
 }
-catch (Exception $e) {
-	$log->error($e->getMessage());
+catch (Throwable $e) {
+	$log->error('Problem with logger: '.$e->getMessage());
 }
 
-$path = $request->getUri()->getPath();
+$relay = json_decode($_ENV['RELAY'], true);
+if (!$relay){
+	// Relay isn't set up, we're done
+	return;
+}
 
-const RELAY_PATH = '/relay/';
+try {
+	$path = $request->getUri()->getPath();
 
-if (str_starts_with($path, RELAY_PATH)){
-	$log->info('Entering relay mode');
-	$relay = explode(RELAY_PATH, $path, 2)[1];
+	if (!str_starts_with($path, RELAY_PATH)){
+		// This request isn't using relay
+		return;
+	}
 
-	match ($relay){
-		'builder' => relay_builder($request, $log),
-	};
+	$relay_path = explode(RELAY_PATH, $path, 2)[1];
+	$relay_config = $relay[$relay_path] ?? null;
+	if (!$relay_config){
+		// Request was trying to use relay but the path wasn't configured, this is likely not desired
+
+		$log->error("No relay target set", ['relay_path' => $relay_path,]);
+
+		return;
+	}
+
+	$log->info('Entering relay mode', [
+		'relay_path' => $relay_path,
+		'relay_config' => $relay_config,
+	]);
+
+	relay($request, $relay_config, $log);
+}
+catch (Throwable $e) {
+	$log->error('Problem with relay: '.$e->getMessage());
 }
