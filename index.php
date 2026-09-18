@@ -7,7 +7,7 @@ use Aws\Result;
 use Aws\Sdk;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ResponseException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\ServerRequest;
 use M1ke\JsonExplore\JsonExplore;
@@ -144,7 +144,7 @@ function relay(ServerRequestInterface $request, array $config, Logger $log): voi
 		$log->notice("Relay sent with response", responseLogContext($response));
 	}
 	catch (GuzzleException $e) {
-		$response = $e instanceof RequestException ? $e->getResponse() : null;
+		$response = $e instanceof ResponseException ? $e->getResponse() : null;
 		if ($response){
 			$log->warning("Request problem", responseLogContext($response));
 

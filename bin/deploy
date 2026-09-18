@@ -1,7 +1,7 @@
 #!/bin/bash
 
-php8.1 composer.phar install --prefer-dist --optimize-autoloader --no-dev
+php8.5 composer.phar install --prefer-dist --optimize-autoloader --no-dev
 
-serverless deploy
+osls deploy
 
-php8.1 composer.phar install
+php8.5 composer.phar install
