@@ -12,45 +12,35 @@ into another tool to process them.
 ## Existing tools
 
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
-* [AWS SAM](https://aws.amazon.com/serverless/sam/)
-* [Terraform](https://www.terraform.io/downloads.html)
+* [oss-serverless](https://github.com/oss-serverless/serverless) (`osls`)
+* [jq](https://jqlang.org) (only for `bin/import`)
 * Some local AWS credentials ([AWS Vault](https://github.com/99designs/aws-vault) is recommended)
 
-## Pre-install
-
-Copy the `terraform.tfvars.example` file to `terraform.tfvars`. You will then want to check the default variables and change them if helpful:
-
-* `region` choose your desired AWS region (e.g. eu-west-1)
-* `deploy_bucket` choose a globally unique bucket name to host your code (e.g. my-company-webhook-logger-abc123)
-
 Note when running all commands below that touch AWS you'll need AWS credentials in your environment.
-There are a variety of ways to do this; using aws-vault (e.g. `aws-vault exec YOUR_PROFILE -- terraform plan`) is recommended
+There are a variety of ways to do this; using aws-vault (e.g. `aws-vault exec YOUR_PROFILE -- bin/deploy dev`) is recommended
 
 ## Install
 
-You must first create resources via Terraform before deploying the application stack:
+All resources (DynamoDB table, IAM role, Lambda function and API Gateway) are defined in `serverless.yml`.
+Create a `.env.dev` file containing `ENV_RELAY` (a JSON relay config, `{}` for none), then for a fresh install run:
 
 ```
-terraform init
-terraform plan
-terraform apply
+osls deploy --stage=dev
 ```
 
-Type "yes" after the Terraform apply step. Once Terraform runs it will output an "ARN" of a role that the
-serverless application will need:
+Subsequent deploys use `bin/deploy dev`, which only updates an existing stack.
+
+### Migrating from Terraform
+
+Earlier versions created the DynamoDB table and IAM role with Terraform. To adopt these into an existing
+stack without recreating them, run `bin/import dev` once instead of `bin/deploy`. It imports both resources
+into the CloudFormation stack, deploys, then removes the old Terraform-named inline policy from the role.
+Afterwards the Terraform state can be discarded (do not run `terraform destroy`).
+
+At the end of a deploy it will output the endpoint:
 
 ```
-webhook-logger-role-arn = arn:aws:iam::XXXX:role/webhook-logger
-```
-
-Copy this "ARN" over the string `YOUR_ROLE_HERE` in `template.yml`
-
-Now run `bin/deploy` which executes a series of AWS SAM commands to upload your code and deploy the function.
-At the end of the run it will output as follows:
-
-```
-Successfully created/updated stack - webhook-logger
-https://xxxxxxx.execute-api.YOUR_REGION_HERE.amazonaws.com/dev
+endpoint: ANY - https://xxxxxxx.execute-api.YOUR_REGION_HERE.amazonaws.com/dev
 ```
 
 NB if you miss the output run `bin/output` to see it again without deploying the stack.

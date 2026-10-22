@@ -1,33 +1,98 @@
 service: webhook-logger
 
+useDotenv: true
+
 provider:
     name: aws
     region: eu-west-1
-    runtime: provided
-    role: arn:aws:iam::004945364680:role/webhook-logger
+    runtime: php-85-fpm
+    iam:
+        role: WebhookLoggerRole
+    environment:
+        RELAY: ${env:ENV_RELAY}
 
 plugins:
     - ./vendor/bref/bref
 
 package:
-    exclude:
-        - '.terraform/**'
-        - 'bin/**'
-        - '.git/**'
-        - '.idea/**'
-        - '*.tfstate'
-        - '*.tf'
-        - 'terraform.tfvars'
-        - 'terraform.tfvars.example'
-        - composer.json
+    patterns:
+        - '!.terraform/**'
+        - '!bin/**'
+        - '!.git/**'
+        - '!.idea/**'
+        - '!*.tfstate*'
+        - '!composer.phar'
+        - '!terraform.tfvars'
+        - '!composer.json'
 
 functions:
     api:
         handler: index.php
         description: ''
         timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
-        layers:
-            - ${bref:layer.php-74-fpm}
         events:
             -   http: 'ANY /'
             -   http: 'ANY /{proxy+}'
+
+resources:
+    Resources:
+        # Retain policies are required to import the resources previously managed by Terraform (see bin/import)
+        WebhookLoggerTable:
+            Type: AWS::DynamoDB::Table
+            DeletionPolicy: Retain
+            UpdateReplacePolicy: Retain
+            Properties:
+                TableName: webhook-logger
+                BillingMode: PAY_PER_REQUEST
+                AttributeDefinitions:
+                    -   AttributeName: id
+                        AttributeType: S
+                    -   AttributeName: datetime
+                        AttributeType: S
+                KeySchema:
+                    -   AttributeName: id
+                        KeyType: HASH
+                    -   AttributeName: datetime
+                        KeyType: RANGE
+                TimeToLiveSpecification:
+                    AttributeName: ttl
+                    Enabled: true
+
+        WebhookLoggerRole:
+            Type: AWS::IAM::Role
+            DeletionPolicy: Retain
+            UpdateReplacePolicy: Retain
+            Properties:
+                RoleName: webhook-logger
+                Path: /
+                AssumeRolePolicyDocument:
+                    Version: '2012-10-17'
+                    Statement:
+                        -   Effect: Allow
+                            Principal:
+                                Service: lambda.amazonaws.com
+                            Action: sts:AssumeRole
+                Policies:
+                    -   PolicyName: webhook-logger
+                        PolicyDocument:
+                            Version: '2012-10-17'
+                            Statement:
+                                -   Sid: DynamoWrite
+                                    Effect: Allow
+                                    Action:
+                                        - dynamodb:DeleteItem
+                                        - dynamodb:DescribeTable
+                                        - dynamodb:GetItem
+                                        - dynamodb:PutItem
+                                        - dynamodb:Query
+                                        - dynamodb:Scan
+                                        - dynamodb:UpdateItem
+                                    Resource:
+                                        - !GetAtt WebhookLoggerTable.Arn
+                                -   Sid: Logging
+                                    Effect: Allow
+                                    Action:
+                                        - logs:CreateLogGroup
+                                        - logs:CreateLogStream
+                                        - logs:PutLogEvents
+                                    Resource: '*'

@@ -1,11 +1,13 @@
 {
     "require": {
-        "bref/bref": "^0.5",
-        "monolog/monolog": "^1.24",
         "m1ke/json-explore": "^0.2.0",
-        "aws/aws-sdk-php": "^3.138"
+        "bref/bref": "^3.0.14",
+        "guzzlehttp/guzzle": "^8.2",
+        "aws/aws-sdk-php": "^3.301",
+        "monolog/monolog": "^3.5",
+        "php": "^8.5.12"
     },
     "require-dev": {
-        "roave/security-advisories": "dev-master"
+        "roave/security-advisories": "dev-latest"
     }
 }

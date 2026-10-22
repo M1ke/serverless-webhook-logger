@@ -7,3 +7,7 @@ terraform.tfvars
 terraform.tfstate*
 .config
 .serverless
+composer.phar
+
+.env.dev
+bin/import
