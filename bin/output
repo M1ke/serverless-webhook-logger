@@ -1,6 +1,6 @@
 #!/bin/bash
 
-stack="webhook-logger"
+stack="webhook-logger-${1:-dev}"
 
 aws cloudformation describe-stacks --stack-name "$stack" \
     --query 'Stacks[0].Outputs[?OutputKey==`ServiceEndpoint`].OutputValue' \

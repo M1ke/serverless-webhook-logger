@@ -2,8 +2,9 @@
 
 php8.5 composer.phar install --prefer-dist --optimize-autoloader --no-dev
 
-stack='webhook-logger-dev'
+stage=${1:-dev}
+stack="webhook-logger-$stage"
 # The first ensures the stack already exists, so this command only _updates_ a stack
-aws cloudformation describe-stacks --stack-name "$stack" >/dev/null && osls deploy
+aws cloudformation describe-stacks --stack-name "$stack" >/dev/null && osls deploy --stage=$stage
 
 php8.5 composer.phar install

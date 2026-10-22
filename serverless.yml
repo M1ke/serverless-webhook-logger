@@ -7,7 +7,7 @@ provider:
     region: eu-west-1
     runtime: php-85-fpm
     iam:
-        role: ${env:ENV_ROLE}
+        role: WebhookLoggerRole
     environment:
         RELAY: ${env:ENV_RELAY}
 
@@ -22,9 +22,7 @@ package:
         - '!.idea/**'
         - '!*.tfstate*'
         - '!composer.phar'
-        - '!*.tf'
         - '!terraform.tfvars'
-        - '!terraform.tfvars.example'
         - '!composer.json'
 
 functions:
@@ -35,3 +33,66 @@ functions:
         events:
             -   http: 'ANY /'
             -   http: 'ANY /{proxy+}'
+
+resources:
+    Resources:
+        # Retain policies are required to import the resources previously managed by Terraform (see bin/import)
+        WebhookLoggerTable:
+            Type: AWS::DynamoDB::Table
+            DeletionPolicy: Retain
+            UpdateReplacePolicy: Retain
+            Properties:
+                TableName: webhook-logger
+                BillingMode: PAY_PER_REQUEST
+                AttributeDefinitions:
+                    -   AttributeName: id
+                        AttributeType: S
+                    -   AttributeName: datetime
+                        AttributeType: S
+                KeySchema:
+                    -   AttributeName: id
+                        KeyType: HASH
+                    -   AttributeName: datetime
+                        KeyType: RANGE
+                TimeToLiveSpecification:
+                    AttributeName: ttl
+                    Enabled: true
+
+        WebhookLoggerRole:
+            Type: AWS::IAM::Role
+            DeletionPolicy: Retain
+            UpdateReplacePolicy: Retain
+            Properties:
+                RoleName: webhook-logger
+                Path: /
+                AssumeRolePolicyDocument:
+                    Version: '2012-10-17'
+                    Statement:
+                        -   Effect: Allow
+                            Principal:
+                                Service: lambda.amazonaws.com
+                            Action: sts:AssumeRole
+                Policies:
+                    -   PolicyName: webhook-logger
+                        PolicyDocument:
+                            Version: '2012-10-17'
+                            Statement:
+                                -   Sid: DynamoWrite
+                                    Effect: Allow
+                                    Action:
+                                        - dynamodb:DeleteItem
+                                        - dynamodb:DescribeTable
+                                        - dynamodb:GetItem
+                                        - dynamodb:PutItem
+                                        - dynamodb:Query
+                                        - dynamodb:Scan
+                                        - dynamodb:UpdateItem
+                                    Resource:
+                                        - !GetAtt WebhookLoggerTable.Arn
+                                -   Sid: Logging
+                                    Effect: Allow
+                                    Action:
+                                        - logs:CreateLogGroup
+                                        - logs:CreateLogStream
+                                        - logs:PutLogEvents
+                                    Resource: '*'
